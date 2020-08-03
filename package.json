@@ -6,7 +6,9 @@
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
     "seed": "knex seed:run",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "mig-latest": "knex migrate:latest",
+    "mig-rollback": "knex migrate:rollback"
   },
   "repository": {
     "type": "git",
@@ -23,5 +25,7 @@
     "knex": "^0.21.2",
     "pg": "^8.3.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^26.2.2"
+  }
 }

@@ -1,16 +1,16 @@
 exports.up = function (knex) {
-  console.log("creating comment table");
-  return knex.schema.createTable('comment', (commentTable) => {
+  console.log("creating comments table");
+  return knex.schema.createTable('comments', (commentTable) => {
     commentTable.increments('comment_id');
-    commentTable.string('author').reference('user.username');
-    commentTable.interger('article_id').references('article.article_id');
-    commentTable.interger('votes').defaultTo(0);
-    articleTable.interger('created_at');
-    articleTable.text('body');
+    commentTable.string('author').references('users.username');
+    commentTable.integer('article_id').references('articles.article_id');
+    commentTable.integer('votes').defaultTo(0);
+    commentTable.timestamp('created_at').defaultTo(knex.fn.now());;
+    commentTable.text('body');
   });
 }
 
 exports.down = function (knex) {
-  console.log("dropping comment table");
-  return knex.schema.dropTable('comment');
+  console.log("dropping comments table");
+  return knex.schema.dropTable('comments');
 };
