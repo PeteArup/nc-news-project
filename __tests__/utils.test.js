@@ -3,10 +3,6 @@ const {
   makeRefObj,
   formatComments,
 } = require('../db/utils/utils');
-const {
-  forEach
-} = require('../db/data/test-data/comments');
-const articles = require('../db/data/development-data/articles');
 
 describe('formatDates', () => {
   test('returns an array ', () => {
@@ -42,7 +38,7 @@ describe('formatDates', () => {
       expect(item.created_at).toBeInstanceOf(Date);
     })
   });
-  test('original array is not changed', () => {
+  test('original array is not mutated', () => {
     const dateToBeConverted = [{
       body: "Oh, I've got compassion!",
       belongs_to: "They're not exactly dogs, are they?",
@@ -61,8 +57,6 @@ describe('formatDates', () => {
   });
 
 });
-
-
 
 describe('makeRefObj', () => {
   test('returns an empty object, when passed an empty array', () => {
@@ -113,7 +107,7 @@ describe('makeRefObj', () => {
     }
     expect(actual).toEqual(expected)
   });
-  test('original array is not changed', () => {
+  test('original array is not mutated', () => {
     const input = [{
       article_id: 1,
       title: 'Living in the shadow of a great man',
@@ -133,16 +127,39 @@ describe('makeRefObj', () => {
       created_at: 1542284514171,
       votes: 100,
     }])
-
   });
 });
 
 describe('formatComments', () => {
-  test('returns an array', () => {
+  test('returns a new array', () => {
     const input = [];
     const actual = formatComments(input);
     const expected = [];
     expect(actual).toEqual(expected);
+    expect(actual).not.toBe(input);
+  });
+  test('original array is not mutated', () => {
+    const input = [{
+      body: "Oh, I've got compassion running",
+      belongs_to: "They're not exactly dogs, are they?",
+      created_by: 'butter_bridge',
+      votes: 16,
+      created_at: 1511354163389
+    }]
+    const ref = {
+      "They're not exactly dogs, are they?": 1
+    }
+    formatComments(input, ref)
+    expect(input).toEqual([{
+      body: "Oh, I've got compassion running",
+      belongs_to: "They're not exactly dogs, are they?",
+      created_by: 'butter_bridge',
+      votes: 16,
+      created_at: 1511354163389
+    }])
+    expect(ref).toEqual({
+      "They're not exactly dogs, are they?": 1
+    })
   });
   test('returns an array with one object with created_by and belongs_to and created_at updated', () => {
     const input = [{
@@ -152,18 +169,41 @@ describe('formatComments', () => {
       votes: 16,
       created_at: 1511354163389
     }]
-    const actual = formatComments(input);
-    expect(actual[0].article_id).toEqual("They're not exactly dogs, are they?")
-    expect(actual[0].author).toEqual('butter_bridge')
-    expect(actual[0].created_at).toBeInstanceOf(Date)
+    const ref = {
+      "They're not exactly dogs, are they?": 1
+    }
+    const output = formatComments(input, ref);
+    output.forEach((item) => {
+      expect(item.article_id).toEqual(1)
+      expect(item.author).toEqual('butter_bridge')
+      expect(item.created_at).toBeInstanceOf(Date)
+    })
   });
+  test('returns an array with multiple object with created_by and belongs_to and created_at updated', () => {
+    const input = [{
+      body: "Oh, I've got compassion running",
+      belongs_to: "They're not exactly dogs, are they?",
+      created_by: 'butter_bridge',
+      votes: 16,
+      created_at: 1511354163389
+    }, {
+      body: ' I carry a log — yes. Is it funny to you? It is not to me.',
+      belongs_to: 'Living in the shadow of a great man',
+      created_by: 'icellusedkars',
+      votes: -100,
+      created_at: 1416746163389,
+    }]
+    const ref = {
+      "They're not exactly dogs, are they?": 1,
+      'Living in the shadow of a great man': 2
+    }
+    const output = formatComments(input, ref);
+    output.forEach((item) => {
+      expect(typeof item.article_id).toBe('number')
+      expect(typeof item.author).toBe('string')
+      expect(item.created_at).toBeInstanceOf(Date)
+      expect(item.belongs_to).toBe(undefined)
+    })
+  });
+
 });
-
-
-// [{
-//   body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
-//   belongs_to: "They're not exactly dogs, are they?",
-//   created_by: 'butter_bridge',
-//   votes: 16,
-//   created_at: 1511354163389,
-// }]

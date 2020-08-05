@@ -1,13 +1,11 @@
 exports.formatDates = list => {
-  const copyList = list.map((item) => {
-    return {
-      ...item
+  const convertedDates = list.map((obj) => {
+    const newObj = {
+      ...obj
     }
-  })
-  const convertedDates = copyList.map((obj) => {
-    const newDate = new Date(obj.created_at)
-    obj.created_at = newDate
-    return obj
+    const newDate = new Date(newObj.created_at)
+    newObj.created_at = newDate
+    return newObj
   })
   return convertedDates
 };
@@ -21,20 +19,16 @@ exports.makeRefObj = list => {
 };
 
 exports.formatComments = (comments, articleRef) => {
-  const copyComments = comments.map((comment) => {
-    return {
-      ...comment
+  const outputArr = comments.map((obj) => {
+    const newObj = {
+      ...obj
     }
-  })
-
-  const outputArr = copyComments.map((obj) => {
-    obj.author = obj.created_by;
-    obj.article_id = obj.belongs_to;
-    obj.created_at = new Date(obj.created_at)
-    delete obj.created_by
-    delete obj.belongs_to
-    return obj
+    newObj.author = newObj.created_by;
+    newObj.article_id = articleRef[newObj.belongs_to];
+    newObj.created_at = new Date(newObj.created_at)
+    delete newObj.created_by
+    delete newObj.belongs_to
+    return newObj
   })
   return outputArr
-
 };
