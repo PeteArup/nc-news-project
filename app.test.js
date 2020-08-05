@@ -75,8 +75,6 @@ describe('app', () => {
             expect(body.msg).toBe("No user found!")
           })
       });
-
-
     });
 
     describe('/articles', () => {
@@ -173,19 +171,169 @@ describe('app', () => {
         });
 
         describe('/articles/:article_id/comments', () => {
-          test('POST 201 - responds with newly added treasure', () => {
-
+          test('POST 201 - responds with newly added comment', () => {
+            const newComment = {
+              username: "lurker",
+              body: "This is a new comment added"
+            }
+            const expected = {
+              comment: ["This is a new comment added"]
+            }
+            return request(app)
+              .post('/api/articles/1/comments')
+              .send(newComment)
+              .expect(201)
+              .then(({
+                body
+              }) => {
+                expect(body).toEqual(expected)
+              })
           });
+          test('POST 404 - responds with error when given a valid but non-existant ID', () => {
+            const newComment = {
+              username: "lurker",
+              body: "This is a new comment added"
+            }
+            return request(app)
+              .post('/api/articles/9999/comments')
+              .send(newComment)
+              .expect(404)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe("Not found!")
+              })
+          });
+          test('POST 400 - responds with error when given an incorrect input', () => {
+            const newComment = {
+              username: "lurker",
+              simon: "This is a new comment added"
+            }
+            return request(app)
+              .post('/api/articles/1/comments')
+              .send(newComment)
+              .expect(400)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe("Bad Request!!")
+              })
+          });
+          test('POST 400 - responds with error when given user that doesnt exist', () => {
+            const newComment = {
+              username: "Phil",
+              body: "This is a new comment added"
+            }
+            return request(app)
+              .post('/api/articles/1/comments')
+              .send(newComment)
+              .expect(404)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe("Not found!")
+              })
+          });
+          test('GET 200 - responds with an array of comments for the given article ID', () => {
+            return request(app)
+              .get('/api/articles/1/comments')
+              .expect(200)
+              .then(({
+                body
+              }) => {
+                expect(body).toEqual(
+                  expect.objectContaining({
+                    comments: expect.arrayContaining([
+                      expect.objectContaining({
+                        comment_id: expect.any(Number),
+                        votes: expect.any(Number),
+                        created_at: expect.any(String),
+                        author: expect.any(String),
+                        body: expect.any(String)
+                      })
+                    ])
+                  })
+                )
+              })
+          });
+          test('GET 404 - responds with an error when given a valid but non-existant ID', () => {
+            return request(app)
+              .get('/api/articles/9999/comments')
+              .expect(404)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe('Not found!')
+              })
+          });
+          test('GET 404 - responds with an error when given a valid ID but no comments are found', () => {
+            return request(app)
+              .get('/api/articles/2/comments')
+              .expect(404)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe('Not found!')
+              })
+          });
+          test('GET 200 - responds with array of comments for the article ID sorted by specified column', () => {
+            return request(app)
+              .get('/api/articles/1/comments?sort_by=votes')
+              .expect(200)
+              .then(({
+                body
+              }) => {
+                expect(body.comments).toBeSortedBy("votes", {
+                  descending: true,
+                  coerce: true
+                })
+              })
+          });
+          test('GET 200 - responds with array of comments for the article ID sorted by default created_at', () => {
+            return request(app)
+              .get('/api/articles/1/comments')
+              .expect(200)
+              .then(({
+                body
+              }) => {
+                expect(body.comments).toBeSortedBy("created_at", {
+                  descending: true,
+                  coerce: true
+                })
+              })
+          });
+          test('GET 200 - responds with array of comments for the article ID ordered by specified order', () => {
+            return request(app)
+              .get('/api/articles/1/comments?order=asc')
+              .expect(200)
+              .then(({
+                body
+              }) => {
+                expect(body.comments).toBeSortedBy("created_at", {
+                  descending: false,
+                  coerce: true
+                })
+              })
+          });
+          test('GET 200 - responds with array of comments for the article ID ordered by default desc', () => {
+            return request(app)
+              .get('/api/articles/1/comments')
+              .expect(200)
+              .then(({
+                body
+              }) => {
+                expect(body.comments).toBeSortedBy("created_at", {
+                  descending: true,
+                  coerce: true
+                })
+              })
+          });
+
+
+
+
         });
       });
-
-
-
-
-
-
-
-
     });
   });
 });

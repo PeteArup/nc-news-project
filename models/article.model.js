@@ -39,3 +39,52 @@ exports.patchVotes = (article_id, inc_votes) => {
       } else return article
     })
 }
+
+exports.postNewComment = (params, comment) => {
+  const {
+    article_id
+  } = params
+  const {
+    username,
+    body
+  } = comment
+
+  // console.log(article_id, '<---ID')
+  // console.log(username, '<---UN')
+  // console.log(body, '<---Body')
+
+  if (typeof body != "string") {
+    return Promise.reject({
+      status: 400,
+      msg: 'Bad Request!!'
+    })
+  } else {
+    const newComment = {
+      author: username,
+      article_id: article_id,
+      body: body
+    }
+    return db("comments")
+      .insert(newComment).returning("body")
+  }
+}
+
+exports.fetchArticleComments = (params, sort_by = 'created_at', order = 'desc') => {
+  const {
+    article_id
+  } = params
+
+  const columnsToReturn = ['comment_id', 'author', 'votes', 'created_at', 'body']
+
+  return db.select(columnsToReturn).from('comments').where({
+    article_id: article_id
+  }).orderBy(sort_by, order).returning("*").then((result) => {
+    if (result.length === 0) {
+      return Promise.reject({
+        status: 404,
+        msg: 'Not found!'
+      })
+    } else return result
+  })
+
+}
