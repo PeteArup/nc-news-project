@@ -7,7 +7,6 @@ const {
   fetchUser,
   fetchTopic
 } = require('../models/article.model')
-const topicsRouter = require('../routers/topics.router')
 
 
 exports.getArticleByID = (req, res, next) => {
