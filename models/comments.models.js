@@ -13,3 +13,16 @@ exports.patchVotes = (comment_id, inc_votes) => {
       } else return comment
     })
 }
+
+exports.deleteComment = (comment_id) => {
+  return db('comments').where('comment_id', comment_id).del().then((delCount) => {
+    if (delCount === 0) {
+      return Promise.reject({
+        status: 404,
+        msg: 'No comment found!'
+      })
+    } else {
+      return delCount
+    }
+  })
+}

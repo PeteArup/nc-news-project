@@ -527,6 +527,21 @@ describe('app', () => {
               expect(body.msg).toBe("Bad Request!!")
             })
         });
+        test('DELETE 204 - deletes the item and responds with nothing', () => {
+          return request(app)
+            .delete('/api/comments/1')
+            .expect(204)
+        });
+        test('DELETE 204 - responds with an error if passed a non-existant ID', () => {
+          return request(app)
+            .delete('/api/comments/9999')
+            .expect(404)
+            .then(({
+              body
+            }) => {
+              expect(body.msg).toBe("No comment found!")
+            })
+        });
       });
     });
   });

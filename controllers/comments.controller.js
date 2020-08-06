@@ -1,5 +1,6 @@
 const {
-  patchVotes
+  patchVotes,
+  deleteComment
 } = require('../models/comments.models')
 
 
@@ -15,6 +16,18 @@ exports.updateVotes = (req, res, next) => {
     res.status(200).send({
       comment
     })
+  }).catch((err) => {
+    next(err)
+  })
+}
+
+exports.removeComment = (req, res, next) => {
+  const {
+    comment_id
+  } = req.params
+
+  deleteComment(comment_id).then(() => {
+    res.sendStatus(204)
   }).catch((err) => {
     next(err)
   })
