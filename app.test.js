@@ -78,8 +78,158 @@ describe('app', () => {
     });
 
     describe('/articles', () => {
+      test('GET 200 - responds with an array of all the articles in the correct format', () => {
+
+        const expected = {
+          article_id: expect.any(Number),
+          author: expect.any(String),
+          title: expect.any(String),
+          topic: expect.any(String),
+          created_at: expect.any(String),
+          votes: expect.any(Number),
+          comment_count: expect.any(Number)
+        }
+        return request(app)
+          .get('/api/articles')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            body.articles.forEach(article => {
+              expect.objectContaining(expected)
+            })
+          })
+      });
+      test('GET 200 - responds with an array of all the articles sorted by votes', () => {
+        return request(app)
+          .get('/api/articles?sort_by=votes')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles).toBeSortedBy("votes", {
+              descending: true
+            })
+          })
+      });
+      test('GET 200 - responds with an array of all the articles sorted by default (dates)', () => {
+        return request(app)
+          .get('/api/articles')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles).toBeSortedBy("created_at", {
+              descending: true
+            })
+          })
+      });
+      test('GET 404 - responds with an error if given an non-existant sort option', () => {
+        return request(app)
+          .get('/api/articles?sort_by=elephants')
+          .expect(404)
+          .then(({
+            body
+          }) => {
+            expect(body.msg).toBe("Not found!")
+          })
+      });
+      test('GET 200 - responds with an array of all the articles in desc order', () => {
+        return request(app)
+          .get('/api/articles?order=desc')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles).toBeSortedBy("created_at", {
+              descending: true
+            })
+          })
+      });
+      test('GET 200 - responds with an array of all the articles in desc order by default', () => {
+        return request(app)
+          .get('/api/articles')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles).toBeSortedBy("created_at", {
+              descending: true
+            })
+          })
+      });
+      test('GET 200 - responds with an array of all the articles sorted author - in asc order', () => {
+        return request(app)
+          .get('/api/articles?sort_by=author&order=asc')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles).toBeSortedBy("author", {
+              descending: false
+            })
+          })
+      });
+      test('GET 200 - responds with an array of all the articles by a specified author', () => {
+        return request(app)
+          .get('/api/articles?author=butter_bridge')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles.length).toBe(3);
+            body.articles.forEach((article) => {
+              expect(article.author).toBe('butter_bridge')
+            })
+          })
+      });
+      test('GET 404 - responds with an error when given an author that doesnt exist', () => {
+        return request(app)
+          .get('/api/articles?author=dave')
+          .expect(404)
+          .then(({
+            body
+          }) => {
+            expect(body.msg).toBe("Not found!")
+          })
+      });
+      test('GET 200 - responds with an array of all the articles by a specified topic', () => {
+        return request(app)
+          .get('/api/articles?topic=cats')
+          .expect(200)
+          .then(({
+            body
+          }) => {
+            expect(body.articles.length).toBe(1);
+            body.articles.forEach((article) => {
+              expect(article.topic).toBe('cats')
+            })
+          })
+      });
+      test('GET 404 - responds with an error when given an topic that doesnt exist', () => {
+        return request(app)
+          .get('/api/articles?topic=dave')
+          .expect(404)
+          .then(({
+            body
+          }) => {
+            expect(body.msg).toBe("Not found!")
+          })
+      });
+
       describe('/articles/:article_id', () => {
         test('GET 200 - reponds with an array of the given article', () => {
+
+          const expected = [{
+            author: expect.any(String),
+            title: expect.any(String),
+            article_id: expect.any(Number),
+            body: expect.any(String),
+            topic: expect.any(String),
+            created_at: expect.any(String),
+            votes: expect.any(Number),
+            comment_count: expect.any(Number),
+          }]
           return request(app)
             .get('/api/articles/1')
             .expect(200)
@@ -88,18 +238,7 @@ describe('app', () => {
             }) => {
               expect(body).toEqual(
                 expect.objectContaining({
-                  article: expect.arrayContaining([
-                    expect.objectContaining({
-                      author: expect.any(String),
-                      title: expect.any(String),
-                      article_id: expect.any(Number),
-                      body: expect.any(String),
-                      topic: expect.any(String),
-                      created_at: expect.any(String),
-                      votes: expect.any(Number),
-                      comment_count: expect.any(Number),
-                    })
-                  ])
+                  article: expect.arrayContaining(expected)
                 })
               )
             })
@@ -276,7 +415,7 @@ describe('app', () => {
                 expect(body.msg).toBe('Not found!')
               })
           });
-          test('GET 200 - responds with array of comments for the article ID sorted by specified column', () => {
+          test('GET 200 - returns array of comments for the article ID sorted by specified column', () => {
             return request(app)
               .get('/api/articles/1/comments?sort_by=votes')
               .expect(200)
@@ -289,7 +428,7 @@ describe('app', () => {
                 })
               })
           });
-          test('GET 200 - responds with array of comments for the article ID sorted by default created_at', () => {
+          test('GET 200 - returns array of comments for the article ID sorted by default created_at', () => {
             return request(app)
               .get('/api/articles/1/comments')
               .expect(200)
@@ -302,7 +441,7 @@ describe('app', () => {
                 })
               })
           });
-          test('GET 200 - responds with array of comments for the article ID ordered by specified order', () => {
+          test('GET 200 - returns array of comments for the article ID ordered by specified order', () => {
             return request(app)
               .get('/api/articles/1/comments?order=asc')
               .expect(200)
@@ -315,7 +454,7 @@ describe('app', () => {
                 })
               })
           });
-          test('GET 200 - responds with array of comments for the article ID ordered by default desc', () => {
+          test('GET 200 - returns array of comments for the article ID ordered by default desc', () => {
             return request(app)
               .get('/api/articles/1/comments')
               .expect(200)
@@ -328,10 +467,6 @@ describe('app', () => {
                 })
               })
           });
-
-
-
-
         });
       });
     });

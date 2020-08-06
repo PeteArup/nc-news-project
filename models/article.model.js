@@ -88,3 +88,51 @@ exports.fetchArticleComments = (params, sort_by = 'created_at', order = 'desc') 
   })
 
 }
+
+exports.fetchArticles = (sort_by = "created_at", order = "desc", author, topic) => {
+  const columnsToReturn = ['articles.author', 'articles.title', 'articles.article_id', 'articles.topic', 'articles.created_at', 'articles.votes']
+  return db
+    .select(columnsToReturn)
+    .from('articles')
+    .leftJoin('comments', 'articles.article_id', 'comments.article_id')
+    .groupBy('articles.article_id')
+    .count('comments.article_id', {
+      as: 'comment_count'
+    })
+    .orderBy(sort_by, order)
+    .modify((query) => {
+      if (author !== undefined) query.where({
+        'articles.author': author
+      })
+      if (topic !== undefined) query.where({
+        'articles.topic': topic
+      })
+    })
+    .then((articles) => {
+      const formattedArticles = articles.map((selectedArticle) => {
+        const newObj = {
+          ...selectedArticle
+        }
+        newObj.comment_count = parseInt(selectedArticle.comment_count)
+        return newObj
+      })
+      return formattedArticles
+    })
+
+}
+
+exports.fetchUser = (author) => {
+  if (author !== undefined) {
+    return db('users').where({
+      username: author
+    })
+  }
+}
+
+exports.fetchTopic = (topic) => {
+  if (topic !== undefined) {
+    return db('topics').where({
+      slug: topic
+    })
+  }
+}

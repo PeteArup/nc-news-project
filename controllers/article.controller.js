@@ -2,8 +2,12 @@ const {
   fetchArticleByID,
   patchVotes,
   postNewComment,
-  fetchArticleComments
+  fetchArticleComments,
+  fetchArticles,
+  fetchUser,
+  fetchTopic
 } = require('../models/article.model')
+const topicsRouter = require('../routers/topics.router')
 
 
 exports.getArticleByID = (req, res, next) => {
@@ -52,8 +56,6 @@ exports.getArticleComments = (req, res, next) => {
     order
   } = req.query
 
-
-
   fetchArticleComments(req.params, sort_by, order).then((comments) => {
     res.status(200).send({
       comments
@@ -61,4 +63,53 @@ exports.getArticleComments = (req, res, next) => {
   }).catch((err) => {
     next(err)
   })
+}
+
+exports.getArticles = (req, res, next) => {
+  const {
+    sort_by,
+    order,
+    author,
+    topic
+  } = req.query
+
+  //const columnsToGet = [sort_by, order, author, topic];
+
+
+  if (author !== undefined) {
+    fetchUser(author).then((user) => {
+      if (user.length !== 0) {
+        fetchArticles(sort_by, order, author, topic).then((articles) => {
+          res.status(200).send({
+            articles
+          })
+        }).catch((err) => {
+          next(err)
+        })
+      } else res.status(404).send({
+        msg: "Not found!"
+      })
+    })
+  } else if (topic !== undefined) {
+    fetchTopic(topic).then((item) => {
+      if (item.length !== 0) {
+        fetchArticles(sort_by, order, author, topic).then((articles) => {
+          res.status(200).send({
+            articles
+          })
+        }).catch((err) => {
+          next(err)
+        })
+      } else res.status(404).send({
+        msg: "Not found!"
+      })
+    })
+  } else
+    fetchArticles(sort_by, order, author, topic).then((articles) => {
+      res.status(200).send({
+        articles
+      })
+    }).catch((err) => {
+      next(err)
+    })
 }

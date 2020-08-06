@@ -3,7 +3,8 @@ const apiRouter = require('./routers/api.router');
 const {
   handlePathErrors,
   handleCustomErrors,
-  handlePSQLErrors
+  handlePSQLErrors,
+  handle500Errors
 } = require('./errors');
 
 const app = express();
@@ -14,7 +15,7 @@ app.use('/api', apiRouter)
 app.all('*', handlePathErrors)
 app.use(handleCustomErrors)
 app.use(handlePSQLErrors)
-
+app.use(handle500Errors)
 
 
 module.exports = app;
