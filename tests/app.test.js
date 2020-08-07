@@ -1,6 +1,6 @@
-const app = require("./app");
+const app = require("../app");
 const request = require("supertest");
-const knex = require("./db/connection");
+const knex = require("../db/connection");
 
 
 
@@ -41,6 +41,14 @@ describe('app', () => {
             )
           })
       });
+      test('PATCH 405 - repsonds with an error - method not found', () => {
+        return request(app)
+          .patch('/api/topics')
+          .expect(405)
+          .then((res) => {
+            expect(res.body.msg).toBe('Method not found, try again.');
+          });
+      });
     });
 
     describe('/users/:username', () => {
@@ -53,13 +61,11 @@ describe('app', () => {
           }) => {
             expect(body).toEqual(
               expect.objectContaining({
-                user: expect.arrayContaining([
-                  expect.objectContaining({
-                    username: expect.any(String),
-                    avatar_url: expect.any(String),
-                    name: expect.any(String)
-                  })
-                ])
+                user: expect.objectContaining({
+                  username: expect.any(String),
+                  avatar_url: expect.any(String),
+                  name: expect.any(String)
+                })
               })
             )
           })
@@ -124,14 +130,14 @@ describe('app', () => {
             })
           })
       });
-      test('GET 404 - responds with an error if given an non-existant sort option', () => {
+      test('GET 400 - responds with an error if given an non-existant sort option', () => {
         return request(app)
           .get('/api/articles?sort_by=elephants')
-          .expect(404)
+          .expect(400)
           .then(({
             body
           }) => {
-            expect(body.msg).toBe("Not found!")
+            expect(body.msg).toBe("Bad Request!!")
           })
       });
       test('GET 200 - responds with an array of all the articles in desc order', () => {
@@ -183,14 +189,14 @@ describe('app', () => {
             })
           })
       });
-      test('GET 404 - responds with an error when given an author that doesnt exist', () => {
+      test('GET 400 - responds with an error when given an author that doesnt exist', () => {
         return request(app)
           .get('/api/articles?author=dave')
-          .expect(404)
+          .expect(400)
           .then(({
             body
           }) => {
-            expect(body.msg).toBe("Not found!")
+            expect(body.msg).toBe("Bad Request!!")
           })
       });
       test('GET 200 - responds with an array of all the articles by a specified topic', () => {
@@ -209,18 +215,18 @@ describe('app', () => {
       test('GET 404 - responds with an error when given an topic that doesnt exist', () => {
         return request(app)
           .get('/api/articles?topic=dave')
-          .expect(404)
+          .expect(400)
           .then(({
             body
           }) => {
-            expect(body.msg).toBe("Not found!")
+            expect(body.msg).toBe("Bad Request!!")
           })
       });
 
       describe('/articles/:article_id', () => {
         test('GET 200 - reponds with an array of the given article', () => {
 
-          const expected = [{
+          const expected = {
             author: expect.any(String),
             title: expect.any(String),
             article_id: expect.any(Number),
@@ -229,7 +235,7 @@ describe('app', () => {
             created_at: expect.any(String),
             votes: expect.any(Number),
             comment_count: expect.any(Number),
-          }]
+          }
           return request(app)
             .get('/api/articles/1')
             .expect(200)
@@ -238,7 +244,7 @@ describe('app', () => {
             }) => {
               expect(body).toEqual(
                 expect.objectContaining({
-                  article: expect.arrayContaining(expected)
+                  article: expected
                 })
               )
             })
@@ -264,20 +270,18 @@ describe('app', () => {
             .then(({
               body
             }) => {
-              expect(body.article[0].votes).toBe(200)
+              expect(body.article.votes).toBe(200)
               expect(body).toEqual(
                 expect.objectContaining({
-                  article: expect.arrayContaining([
-                    expect.objectContaining({
-                      author: expect.any(String),
-                      title: expect.any(String),
-                      article_id: expect.any(Number),
-                      body: expect.any(String),
-                      topic: expect.any(String),
-                      created_at: expect.any(String),
-                      votes: expect.any(Number)
-                    })
-                  ])
+                  article: expect.objectContaining({
+                    author: expect.any(String),
+                    title: expect.any(String),
+                    article_id: expect.any(Number),
+                    body: expect.any(String),
+                    topic: expect.any(String),
+                    created_at: expect.any(String),
+                    votes: expect.any(Number)
+                  })
                 })
               )
             })
@@ -308,6 +312,29 @@ describe('app', () => {
               expect(body.msg).toBe("Bad Request!!")
             })
         });
+        test('PATCH 400 - responds with an unchanged article', () => {
+          return request(app)
+            .patch('/api/articles/1')
+            .expect(200)
+            .then(({
+              body
+            }) => {
+              expect(body.article.votes).toBe(100)
+              expect(body).toEqual(
+                expect.objectContaining({
+                  article: expect.objectContaining({
+                    author: expect.any(String),
+                    title: expect.any(String),
+                    article_id: expect.any(Number),
+                    body: expect.any(String),
+                    topic: expect.any(String),
+                    created_at: expect.any(String),
+                    votes: expect.any(Number)
+                  })
+                })
+              )
+            })
+        });
 
         describe('/articles/:article_id/comments', () => {
           test('POST 201 - responds with newly added comment', () => {
@@ -316,7 +343,14 @@ describe('app', () => {
               body: "This is a new comment added"
             }
             const expected = {
-              comment: ["This is a new comment added"]
+              comment: {
+                author: expect.any(String),
+                comment_id: expect.any(Number),
+                article_id: expect.any(Number),
+                body: expect.any(String),
+                created_at: expect.any(String),
+                votes: expect.any(Number),
+              }
             }
             return request(app)
               .post('/api/articles/1/comments')
@@ -371,6 +405,20 @@ describe('app', () => {
                 body
               }) => {
                 expect(body.msg).toBe("Not found!")
+              })
+          });
+          test('POST 400 - responds with error when given partial data', () => {
+            const newComment = {
+              username: "lurker"
+            }
+            return request(app)
+              .post('/api/articles/1/comments')
+              .send(newComment)
+              .expect(400)
+              .then(({
+                body
+              }) => {
+                expect(body.msg).toBe("Bad Request!!")
               })
           });
           test('GET 200 - responds with an array of comments for the given article ID', () => {
@@ -467,6 +515,14 @@ describe('app', () => {
                 })
               })
           });
+          test('PUT 405 - repsonds with an error - method not found', () => {
+            return request(app)
+              .put('/api/articles/1/comments')
+              .expect(405)
+              .then((res) => {
+                expect(res.body.msg).toBe('Method not found, try again.');
+              });
+          });
         });
       });
     });
@@ -493,10 +549,10 @@ describe('app', () => {
             .then(({
               body
             }) => {
-              expect(body.comment[0].votes).toBe(116)
+              expect(body.comment.votes).toBe(116)
               expect(body).toEqual(
                 expect.objectContaining({
-                  comment: expect.arrayContaining([expected])
+                  comment: expected
                 })
               )
             })

@@ -4,6 +4,12 @@ exports.handlePathErrors = (req, res, next) => {
   })
 }
 
+exports.handle405Errors = (req, res, next) => {
+  res.status(405).send({
+    msg: 'Method not found, try again.'
+  })
+}
+
 exports.handleCustomErrors = (err, req, res, next) => {
   if ('status' in err) {
     res.status(err.status).send({
@@ -13,11 +19,11 @@ exports.handleCustomErrors = (err, req, res, next) => {
 }
 
 exports.handlePSQLErrors = (err, req, res, next) => {
-  if (err.code === '22P02') {
+  if (err.code === '22P02' || err.code === '42703') {
     res.status(400).send({
       msg: 'Bad Request!!'
     })
-  } else if (err.code === '23503' || err.code === '42703') {
+  } else if (err.code === '23503') {
     res.status(404).send({
       msg: 'Not found!'
     })

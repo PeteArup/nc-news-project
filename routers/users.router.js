@@ -3,9 +3,11 @@ const {
   getUserByID
 } = require('../controllers/users.controller');
 
+const {
+  handle405Errors
+} = require('../errors')
 
-
-usersRouter.get("/:username", getUserByID)
+usersRouter.route("/:username").get(getUserByID).all(handle405Errors)
 
 
 module.exports = usersRouter;

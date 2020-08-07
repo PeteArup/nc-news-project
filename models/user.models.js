@@ -7,6 +7,6 @@ exports.fetchUserByID = (username) => {
         status: 404,
         msg: 'No user found!'
       })
-    } else return user
+    } else return user[0]
   })
 }

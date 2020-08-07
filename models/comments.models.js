@@ -10,7 +10,7 @@ exports.patchVotes = (comment_id, inc_votes) => {
           status: 404,
           msg: 'No comment found!'
         })
-      } else return comment
+      } else return comment[0]
     })
 }
 

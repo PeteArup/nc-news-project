@@ -72,9 +72,6 @@ exports.getArticles = (req, res, next) => {
     topic
   } = req.query
 
-  //const columnsToGet = [sort_by, order, author, topic];
-
-
   if (author !== undefined) {
     fetchUser(author).then((user) => {
       if (user.length !== 0) {
@@ -85,8 +82,8 @@ exports.getArticles = (req, res, next) => {
         }).catch((err) => {
           next(err)
         })
-      } else res.status(404).send({
-        msg: "Not found!"
+      } else res.status(400).send({
+        msg: "Bad Request!!"
       })
     })
   } else if (topic !== undefined) {
@@ -99,8 +96,8 @@ exports.getArticles = (req, res, next) => {
         }).catch((err) => {
           next(err)
         })
-      } else res.status(404).send({
-        msg: "Not found!"
+      } else res.status(400).send({
+        msg: "Bad Request!!"
       })
     })
   } else

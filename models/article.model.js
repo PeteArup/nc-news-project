@@ -16,28 +16,35 @@ exports.fetchArticleByID = (article_id) => {
           status: 404,
           msg: 'No article found!'
         })
-      } else return article.map((selectedArticle) => {
-        const newObj = {
-          ...selectedArticle
-        }
-        newObj.comment_count = parseInt(selectedArticle.comment_count)
-        return newObj
-      })
+      } else {
+        article[0].comment_count = parseInt(article[0].comment_count)
+        return article[0]
+      }
     })
 }
 
 exports.patchVotes = (article_id, inc_votes) => {
-  return db('articles')
-    .where('articles.article_id', article_id)
-    .increment('votes', inc_votes)
-    .returning('*').then((article) => {
-      if (article.length === 0) {
-        return Promise.reject({
-          status: 404,
-          msg: 'No article found!'
-        })
-      } else return article
-    })
+
+  if (inc_votes !== undefined) {
+    return db('articles')
+      .where('articles.article_id', article_id)
+      .increment('votes', inc_votes)
+      .returning('*').then((article) => {
+        if (article.length === 0) {
+          return Promise.reject({
+            status: 404,
+            msg: 'No article found!'
+          })
+        } else return article[0]
+      })
+  } else {
+    return db('articles')
+      .where('articles.article_id', article_id)
+      .returning('*')
+      .then((article) => {
+        return article[0]
+      })
+  }
 }
 
 exports.postNewComment = (params, comment) => {
@@ -48,10 +55,6 @@ exports.postNewComment = (params, comment) => {
     username,
     body
   } = comment
-
-  // console.log(article_id, '<---ID')
-  // console.log(username, '<---UN')
-  // console.log(body, '<---Body')
 
   if (typeof body != "string") {
     return Promise.reject({
@@ -65,7 +68,9 @@ exports.postNewComment = (params, comment) => {
       body: body
     }
     return db("comments")
-      .insert(newComment).returning("body")
+      .insert(newComment).returning("*").then((comment) => {
+        return comment[0]
+      })
   }
 }
 

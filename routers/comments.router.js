@@ -4,6 +4,10 @@ const {
   removeComment
 } = require('../controllers/comments.controller')
 
-commentsRouter.route("/:comment_id").patch(updateVotes).delete(removeComment)
+const {
+  handle405Errors
+} = require('../errors')
+
+commentsRouter.route("/:comment_id").patch(updateVotes).delete(removeComment).all(handle405Errors)
 
 module.exports = commentsRouter;
