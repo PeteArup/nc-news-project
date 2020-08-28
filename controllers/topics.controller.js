@@ -1,14 +1,13 @@
-const {
-  fetchTopics
-} = require("../models/topics.models")
+const { fetchTopics } = require("../models/topics.models");
 
 exports.getTopics = (req, res) => {
-  fetchTopics().then((topics) => {
-    res.status(200).send({
-      topics
+  fetchTopics()
+    .then((topics) => {
+      res.status(200).send({
+        topics,
+      });
     })
-  }).catch((err) => {
-    next(err)
-  })
-
-}
+    .catch((err) => {
+      next(err);
+    });
+};
